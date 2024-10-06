@@ -12,8 +12,9 @@ async fn main() -> Result<(), iced::Error> {
     let conn = Database::new().await.conn;
     migrate!([Pom], &conn);
     Pom::create(kwargs!(name = "metatype"), &conn).await;
+    Pom::create(kwargs!(name = "Perso Project"), &conn).await;
 
-    let pom = Pom::get(kwargs!(name == "metatype"), &conn).await.unwrap();
+    let pom = Pom::all(&conn).await;
 
     let settings = Settings {
         id: Some("Pom".to_string()),

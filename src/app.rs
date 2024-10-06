@@ -1,42 +1,41 @@
 use super::Pom;
-
-use std::time::Duration;
-
+use iced::theme::Button as ButtonTheme;
 use iced::{
     executor, time,
-    widget::{button, column, container, text},
-    Application, Command, Element, Length, Padding, Subscription, Theme,
+    widget::{button, container, text, Column},
+    Application, Command, Element, Length, Subscription, Theme,
 };
-
-use iced::theme::Button as ButtonTheme;
+use std::time::Duration;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Message {
     Toggle,
     Tick,
+    Select(usize),
 }
 
 pub struct App {
-    task_name: String,
-    time: i32,
-    mem: i32,
+    tasks: Vec<Pom>,
+    time: Option<i32>,
+    mem: Option<i32>,
     is_running: bool,
+    selected_task: Option<usize>,
 }
 
 impl Application for App {
     type Executor = executor::Default;
     type Message = Message;
     type Theme = Theme;
-    type Flags = Pom;
+    type Flags = Vec<Pom>;
 
-    fn new(flags: Self::Flags) -> (Self, iced::Command<Self::Message>) {
-        let time = flags.duration_minutes * 60;
+    fn new(tasks: Self::Flags) -> (Self, iced::Command<Self::Message>) {
         (
             App {
-                task_name: flags.name.to_uppercase(),
-                time,
-                mem: time,
+                tasks,
+                time: None,
+                mem: None,
                 is_running: false,
+                selected_task: None,
             },
             Command::none(),
         )
@@ -56,13 +55,24 @@ impl Application for App {
 
     fn update(&mut self, message: Self::Message) -> iced::Command<Self::Message> {
         match message {
+            Message::Select(id) => {
+                self.selected_task = Some(id);
+                if let Some(task) = self.tasks.get(id) {
+                    let time = Some(task.duration_minutes * 60);
+                    self.time = time;
+                    self.mem = time;
+                    self.is_running = false;
+                }
+            }
             Message::Toggle => {
-                self.is_running = !self.is_running;
+                if self.time.is_some() {
+                    self.is_running = !self.is_running;
+                }
             }
             Message::Tick => {
-                if self.is_running {
-                    if self.time > 0 {
-                        self.time -= 1;
+                if let Some(time) = self.time {
+                    if time > 0 {
+                        self.time = Some(time - 1);
                     } else {
                         self.is_running = false;
                         self.time = self.mem;
@@ -74,29 +84,53 @@ impl Application for App {
     }
 
     fn view(&self) -> Element<Self::Message> {
-        let button_label = if self.is_running { "Pause" } else { "Start" };
+        let timer_text = if let Some(time) = self.time {
+            let minutes = time / 60;
+            let seconds = time % 60;
+            format!("{:02}:{:02}", minutes, seconds)
+        } else {
+            "00:00".to_string()
+        };
 
-        let hours = self.time / 3600;
-        let minutes = (self.time % 3600) / 60;
-        let seconds = self.time % 60;
+        let timer_display = text(timer_text).size(40);
 
-        let time_formatted = format!("{:02}:{:02}:{:02}", hours, minutes, seconds);
+        let start_stop_button = button(text(if self.is_running { "STOP" } else { "START" }))
+            .style(ButtonTheme::custom(style::CustomButton))
+            .on_press(Message::Toggle);
 
-        container(column![
-            text(self.task_name.clone()),
-            text(time_formatted),
-            button(button_label)
-                .padding(Padding::from([5, 0, 0, 30]))
-                .width(100)
-                .height(30)
-                .style(ButtonTheme::custom(style::CustomButton))
-                .on_press(Message::Toggle),
-        ])
-        .width(Length::Fill)
-        .height(Length::Fill)
-        .center_x()
-        .center_y()
-        .into()
+        let task_buttons = Column::with_children(
+            self.tasks
+                .iter()
+                .enumerate()
+                .map(|(i, item)| {
+                    let is_selected = self.selected_task == Some(i);
+                    button(text(item.name.to_uppercase()))
+                        .width(200)
+                        .style(if is_selected {
+                            ButtonTheme::Primary
+                        } else {
+                            ButtonTheme::Secondary
+                        })
+                        .on_press(Message::Select(i))
+                        .into()
+                })
+                .collect(),
+        )
+        .spacing(10);
+
+        let content = Column::new()
+            .push(timer_display)
+            .push(task_buttons)
+            .push(start_stop_button)
+            .spacing(20)
+            .align_items(iced::Alignment::Center);
+
+        container(content)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .center_x()
+            .center_y()
+            .into()
     }
 }
 
