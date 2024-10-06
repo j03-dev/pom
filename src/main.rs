@@ -14,7 +14,7 @@ async fn main() -> Result<(), iced::Error> {
     Pom::create(kwargs!(name = "metatype"), &conn).await;
     Pom::create(kwargs!(name = "Perso Project"), &conn).await;
 
-    let pom = Pom::all(&conn).await;
+    let tasks = Pom::all(&conn).await;
 
     let settings = Settings {
         id: Some("Pom".to_string()),
@@ -32,7 +32,7 @@ async fn main() -> Result<(), iced::Error> {
             },
             ..Default::default()
         },
-        flags: pom,
+        flags: tasks,
         default_font: Font::DEFAULT,
         default_text_size: 15.0,
         antialiasing: true,
