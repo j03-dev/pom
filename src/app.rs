@@ -8,6 +8,8 @@ use iced::{
     Application, Command, Element, Length, Padding, Subscription, Theme,
 };
 
+use iced::theme::Button as ButtonTheme;
+
 #[derive(Debug, Clone, Copy)]
 pub enum Message {
     Toggle,
@@ -34,7 +36,7 @@ impl Application for App {
                 task_name: flags.name.to_uppercase(),
                 time,
                 mem: time,
-                is_running: false, // Initially the task is not running
+                is_running: false,
             },
             Command::none(),
         )
@@ -84,8 +86,10 @@ impl Application for App {
             text(self.task_name.clone()),
             text(time_formatted),
             button(button_label)
-                .padding(Padding::from([0, 0, 0, 30]))
+                .padding(Padding::from([5, 0, 0, 30]))
                 .width(100)
+                .height(30)
+                .style(ButtonTheme::custom(style::CustomButton))
                 .on_press(Message::Toggle),
         ])
         .width(Length::Fill)
@@ -93,5 +97,33 @@ impl Application for App {
         .center_x()
         .center_y()
         .into()
+    }
+}
+
+mod style {
+    use iced::widget::button;
+    use iced::{Background, BorderRadius, Color, Vector};
+
+    pub struct CustomButton;
+
+    impl button::StyleSheet for CustomButton {
+        type Style = iced::Theme;
+
+        fn active(&self, _style: &Self::Style) -> button::Appearance {
+            button::Appearance {
+                background: Some(Background::Color(Color::from_rgb(0.2, 0.5, 0.8))),
+                border_radius: BorderRadius::from(20.0),
+                text_color: Color::WHITE,
+                ..button::Appearance::default()
+            }
+        }
+
+        fn hovered(&self, style: &Self::Style) -> button::Appearance {
+            button::Appearance {
+                background: Some(Background::Color(Color::from_rgb(0.3, 0.6, 0.9))),
+                shadow_offset: Vector::new(1.0, 2.0),
+                ..self.active(style)
+            }
+        }
     }
 }

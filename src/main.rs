@@ -13,7 +13,7 @@ async fn main() -> Result<(), iced::Error> {
     migrate!([Pom], &conn);
     Pom::create(kwargs!(name = "metatype"), &conn).await;
 
-    let pom = Pom::get(kwargs!(name = "metatype"), &conn).await.unwrap();
+    let pom = Pom::get(kwargs!(name == "metatype"), &conn).await.unwrap();
 
     let settings = Settings {
         id: Some("Pom".to_string()),
