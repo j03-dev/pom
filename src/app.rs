@@ -109,9 +109,8 @@ impl Application for App {
 
         let timer_display = text(timer_text).size(40);
 
-        let start_stop_button = button(text(if self.is_running { "STOP" } else { "START" }))
-            .style(ButtonTheme::custom(style::CustomButton))
-            .on_press(Message::Toggle);
+        let start_stop_button =
+            button(text(if self.is_running { "STOP" } else { "START" })).on_press(Message::Toggle);
 
         let task_buttons = Column::with_children(
             self.tasks
@@ -146,33 +145,5 @@ impl Application for App {
             .center_x()
             .center_y()
             .into()
-    }
-}
-
-mod style {
-    use iced::widget::button;
-    use iced::{Background, BorderRadius, Color, Vector};
-
-    pub struct CustomButton;
-
-    impl button::StyleSheet for CustomButton {
-        type Style = iced::Theme;
-
-        fn active(&self, _style: &Self::Style) -> button::Appearance {
-            button::Appearance {
-                background: Some(Background::Color(Color::from_rgb(0.2, 0.5, 0.8))),
-                border_radius: BorderRadius::from(20.0),
-                text_color: Color::WHITE,
-                ..button::Appearance::default()
-            }
-        }
-
-        fn hovered(&self, style: &Self::Style) -> button::Appearance {
-            button::Appearance {
-                background: Some(Background::Color(Color::from_rgb(0.3, 0.6, 0.9))),
-                shadow_offset: Vector::new(1.0, 2.0),
-                ..self.active(style)
-            }
-        }
     }
 }
