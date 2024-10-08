@@ -1,6 +1,6 @@
 use rusql_alchemy::prelude::*;
 
-#[derive(Model, Clone, FromRow, Debug)]
+#[derive(Model, Clone, FromRow, Debug, Default)]
 pub struct Pom {
     #[model(primary_key = true, auto = true)]
     pub id: Integer,

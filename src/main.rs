@@ -11,6 +11,11 @@ use rusql_alchemy::prelude::*;
 async fn main() -> Result<(), iced::Error> {
     let conn = Database::new().await.conn;
 
+    migrate!([Pom], &conn);
+
+    Pom::create(kwargs!(name = "metatype"), &conn).await;
+    Pom::create(kwargs!(name = "Projet perso", duration_minutes = 10, break_duration_minutes = 2 ), &conn).await;
+
     let tasks = Pom::all(&conn).await;
 
     let settings = Settings {

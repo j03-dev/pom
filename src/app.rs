@@ -17,8 +17,10 @@ pub enum Message {
 pub struct App {
     tasks: Vec<Pom>,
     time: Option<i32>,
+    break_time: Option<i32>,
     mem: Option<i32>,
     is_running: bool,
+    break_mode: bool,
     selected_task: Option<usize>,
 }
 
@@ -34,7 +36,9 @@ impl Application for App {
                 tasks,
                 time: None,
                 mem: None,
+                break_time: None,
                 is_running: false,
+                break_mode: false,
                 selected_task: None,
             },
             Command::none(),
@@ -60,6 +64,7 @@ impl Application for App {
                 if let Some(task) = self.tasks.get(id) {
                     let time = Some(task.duration_minutes * 60);
                     self.time = time;
+                    self.break_time = Some(task.break_duration_minutes * 60);
                     self.mem = time;
                     self.is_running = false;
                 }
@@ -71,11 +76,19 @@ impl Application for App {
             }
             Message::Tick => {
                 if let Some(time) = self.time {
-                    if time > 0 {
-                        self.time = Some(time - 1);
-                    } else {
-                        self.is_running = false;
-                        self.time = self.mem;
+                    // use match instead
+                    match time {
+                        time if time > 0 => self.time = Some(time - 1),
+                        0 => {
+                            if self.break_mode {
+                                self.time = self.mem;
+                                self.break_mode = false;
+                            } else {
+                                self.time = self.break_time;
+                                self.break_mode = true
+                            }
+                        }
+                        _ => (),
                     }
                 }
             }
@@ -84,10 +97,12 @@ impl Application for App {
     }
 
     fn view(&self) -> Element<Self::Message> {
+        let break_mode = if self.break_mode { "BREAK" } else { "WORK" };
+
         let timer_text = if let Some(time) = self.time {
             let minutes = time / 60;
             let seconds = time % 60;
-            format!("{:02}:{:02}", minutes, seconds)
+            format!("{}: {:02}:{:02}", break_mode, minutes, seconds)
         } else {
             "00:00".to_string()
         };
